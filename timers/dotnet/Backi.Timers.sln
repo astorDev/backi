@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backi.Timers", "lib\Backi.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backi.Timers.Tests", "tests\Backi.Timers.Tests.csproj", "{E3AB22F7-B144-46CA-81A0-9E66605A767B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "webapi2", "playground\webapi2\webapi2.csproj", "{C8002102-5E3C-4566-BA07-6B7CE0138810}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,13 +32,8 @@ Global
 		{E3AB22F7-B144-46CA-81A0-9E66605A767B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E3AB22F7-B144-46CA-81A0-9E66605A767B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E3AB22F7-B144-46CA-81A0-9E66605A767B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C8002102-5E3C-4566-BA07-6B7CE0138810}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C8002102-5E3C-4566-BA07-6B7CE0138810}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C8002102-5E3C-4566-BA07-6B7CE0138810}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C8002102-5E3C-4566-BA07-6B7CE0138810}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3B4DF97E-3B80-4920-9183-A47B86A271AE} = {27B3BB48-489D-47BD-9A00-1114D47E619A}
-		{C8002102-5E3C-4566-BA07-6B7CE0138810} = {27B3BB48-489D-47BD-9A00-1114D47E619A}
 	EndGlobalSection
 EndGlobal
