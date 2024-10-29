@@ -6,4 +6,4 @@ Periodically executing an action is pretty common programming task, virtually an
 
 Since the sixth version .NET ships with 3 timers: `System.Threading.Timer`, `System.Timers.Timer`, and `System.Threading.PeriodicTimer`. We've experimented with them in our `HostedTimerService` and figured out API and behaviour of each. Unfortunatelly, none of them comes with a simple API or exception handling. So we have created our own version on top of the `System.Threading.Timer`.
 
-You can use the timer as a [nuget](https://www.nuget.org/packages/Backi.Timers) or check out the source code in [the github repo](). And by the way... claps are appreciated 👏
+You can use the timer as a [nuget](https://www.nuget.org/packages/Backi.Timers) or check out the source code in [the github repo](https://github.com/astorDev/backi/tree/main/timers/dotnet/playground/webapi). And by the way... claps are appreciated 👏
