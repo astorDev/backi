@@ -1,0 +1,15 @@
+on:
+  push:
+    paths:
+      - 'timers/dotnet/lib/**'
+      - '.github/workflows/timers-nuget.yml'
+
+jobs:
+  publish:
+    name: Pack & Publish nuget
+    runs-on: ubuntu-latest
+    steps:
+      - uses: astorDev/versy/calver/nuget@main
+        with:
+          project: my/awesome/lib/Backi.Timers
+          nuget-api-key: ${{ secrets.NUGET_API_KEY }}
