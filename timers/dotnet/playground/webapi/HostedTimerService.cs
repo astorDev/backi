@@ -11,9 +11,9 @@ public class HostedTimerService(IConfiguration configuration, ILogger<HostedTime
         Action startAction = timerType switch
         {
             "Threading" => StartThreadingTimer,
+            "System" => StartSystemTimer,
             "Periodic" => StartPeriodicTimer,
             "Safe" => StartSafeTimer,
-            "System" => StartSystemTimer,
             _ => () => { },
         };
 
@@ -24,7 +24,7 @@ public class HostedTimerService(IConfiguration configuration, ILogger<HostedTime
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        Console.WriteLine("HostedTimerService stopped");
+        logger.LogInformation("HostedTimerService stopped");
         return Task.CompletedTask;
     }
 
@@ -37,7 +37,12 @@ public class HostedTimerService(IConfiguration configuration, ILogger<HostedTime
 
     public void StartThreadingTimer()
     {
-        _ = new Timer((t) => Tick(), null, TimeSpan.Zero, TimeSpan.FromSeconds(2));
+        _ = new Timer(
+            callback: t => Tick(), 
+            state: null, 
+            dueTime: TimeSpan.Zero, 
+            period: TimeSpan.FromSeconds(2)
+        );
     }
 
     public void StartPeriodicTimer()
@@ -53,7 +58,11 @@ public class HostedTimerService(IConfiguration configuration, ILogger<HostedTime
     }
 
     public void StartSafeTimer() {
-        _ = SafeTimer.RunNowAndPeriodically(TimeSpan.FromSeconds(2), Tick, ex => logger.LogError(ex, "Error in timer"));
+        _ = SafeTimer.RunNowAndPeriodically(
+            TimeSpan.FromSeconds(2), 
+            Tick, 
+            ex => logger.LogError(ex, "Error in timer")
+        );
     }
 
     public void Tick()
