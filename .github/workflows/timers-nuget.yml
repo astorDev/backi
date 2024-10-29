@@ -1,8 +1,11 @@
+name: Timers Nuget
+
 on:
   push:
     paths:
       - 'timers/dotnet/lib/**'
       - '.github/workflows/timers-nuget.yml'
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -11,5 +14,5 @@ jobs:
     steps:
       - uses: astorDev/versy/calver/nuget@main
         with:
-          project: my/awesome/lib/Backi.Timers
+          project: timers/dotnet/lib/Backi.Timers
           nuget-api-key: ${{ secrets.NUGET_API_KEY }}
