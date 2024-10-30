@@ -4,9 +4,7 @@ Periodically executing an action is a pretty common programming task, virtually 
 
 ## Preparing our app
 
-```sh
-dotnet new web
-```
+To keep it real let's set up our experiments in a way we may actually use timers in a production-ready service: as an `IHostedService`. Let's init our project with a minimalistic web project: `dotnet new web` and then write a skeleton for our service, which will start a timer based on the values we will pass to it from the configuration
 
 ```csharp
 public class HostedTimerService(IConfiguration configuration, ILogger<HostedTimerService> logger) : IHostedService
@@ -36,8 +34,6 @@ public class HostedTimerService(IConfiguration configuration, ILogger<HostedTime
         return Task.CompletedTask;
     }
 
-
-
     public void StartSystemTimer()
     {
     }
@@ -52,6 +48,8 @@ public class HostedTimerService(IConfiguration configuration, ILogger<HostedTime
 }
 ```
 
+Now let's update our `Program.cs` to actually use the service, and to write compact logs:
+
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.AddSimpleConsole(c => c.SingleLine = true);
@@ -63,13 +61,15 @@ var app = builder.Build();
 app.Run();
 ```
 
-```sh
-dotnet run
-```
+That's about it for setup. Running `dotnet run` should give us logs similar to the ones below:
 
 ![](setup-demo.gif)
 
+Now let's start an actual experiment!
+
 ## System.Threading.Timer
+
+First, let's define a simple method that will be executed each time our timer fires a callback. The method we'll do just two things: identify it was triggered and sometimes throw an exception:
 
 ```csharp
 public void Tick()
@@ -81,6 +81,8 @@ public void Tick()
     }
 }
 ```
+
+To start timer from the `System.Threading` namespace we'll provide a zero `dueTime`, meaning it should start immediately and 2 seconds `period`, meaning it should fire callback once in two seconds!
 
 ```csharp
 public void StartThreadingTimer()
@@ -94,13 +96,15 @@ public void StartThreadingTimer()
 }
 ```
 
-```sh
-dotnet run --timer=Threading
-```
+Running it by `dotnet run --timer=Threading` will print us the ticker response, but kill the whole application in case of a error:
 
 ![](threading-demo.gif)
 
+Killing the whole app doesn't seem like a pleasable idea at all. Let's see what other timers have to offer.
+
 ## System.Timers.Timer
+
+The timer from `System.Timers` utilizes an events-based approach, to start it we'll need something like this:
 
 ```csharp
 public void StartSystemTimer()
@@ -111,11 +115,13 @@ public void StartSystemTimer()
 }
 ```
 
-```sh
-dotnet run --timer=System
-```
+Running it with `dotnet run --timer=System` will give us ticks without breaking the app.
 
 ![](system-demo-silent.gif)
+
+> The timer waits for its interval before running for the first time. In my view, that's not something we want and we will address it later.
+
+Although now the app doesn't break it also doesn't identify that an exception is occurring, which is not behaviour we want either. We'll need to handle that on our own. Let's add a configuration flag, that will highlight to us that an exception is about to happen:
 
 ```csharp
 public void Tick()
@@ -130,13 +136,15 @@ public void Tick()
 }
 ```
 
-```sh
-dotnet run --timer=System --logTickError=true
-```
+Now with `dotnet run --timer=System --logTickError=true` will be able to see the occurring exceptions:
 
 ![](system-demo-logged.gif)
 
+Although, that behaviour is more stable than the one we witnessed before it requires a dedicated effort for proper exception handling. This is especially worrying when the most straightforward implementation leads to silenced exceptions and there's nothing indication that a dedicated effort should be made. Let's see what else we have.
+
 ## System.Threading.PeriodicTimer
+
+`PeriodicTimer` was added in `.NET 6` and it is promoted by Microsoft as the modest modern and straight-forward way to implement the functionality we are seeking. Surprisingly, I find the code for the timer most clumsy of all. 
 
 ```csharp
 public void StartPeriodicTimer()
@@ -152,23 +160,27 @@ public void StartPeriodicTimer()
 }
 ```
 
-```sh
-dotnet run --timer=Periodic
-```
+To make it worse running the code by `dotnet run --timer=Periodic` gives the most confusing behaviour, of just freezing in some point.
 
 ![](periodic-demo-silent.gif)
 
-```sh
-dotnet run --timer=Periodic --logTickError=true
-```
+As you may have guessed the freezing occurs because of an occurred exception, which we can ensure by running our app with the previously added logging flag: `dotnet run --timer=Periodic --logTickError=true`
 
 ![](periodic-demo-logged.gif)
 
+Unfortunately, the newest `PeriodicTimer` doesn't really solve any problem we have. So how about we build something different?
+
 ## SafeTimer
+
+We'll build our timer on-top of the only timer that allows to trigger tick immediately: The one from the threading namespace.
 
 ```csharp
 public class SafeTimer(Timer innerTimer)
 ```
+
+You may notice the name for our new timer is `SafeTimer`. That's because our timer will protect us from an occurring exception killing our app, simultaneously identifying to us that we should do something with an occurring exception:
+
+> We'll do two methods for synchronous and asynchronous operations
 
 ```csharp
 private static TimerCallback TimerCallback(Action action, Action<Exception>? onException = null)
@@ -198,6 +210,8 @@ private static TimerCallback TimerCallback(Func<Task> action, Action<Exception>?
 }
 ```
 
+Let's now provide the most unambiguous methods to run our timer, with asynchronous operations support included:
+
 ```csharp
 private static SafeTimer RunNowAndPeriodically(TimerCallback callback, TimeSpan interval) {
     var innerTimer = new Timer(callback, null, TimeSpan.Zero, interval);
@@ -213,9 +227,7 @@ public static SafeTimer RunNowAndPeriodically(TimeSpan interval, Func<Task> acti
 }    
 ```
 
-```csharp
-"Safe" => StartSafeTimer,
-```
+Now let's use our timer in the hosted service:
 
 ```csharp
 public void StartSafeTimer() {
@@ -227,9 +239,21 @@ public void StartSafeTimer() {
 }
 ```
 
+And add an option to trigger it from the configuration:
+
+```csharp
+"Safe" => StartSafeTimer,
+```
+
+With that, by running `dotnet run --timer=System` we will get a timer, that starts immediately and logs an occurring exception without freezing or killing our app:
+
 ![](safe-demo.gif)
 
+This wraps up the main part about timers. But how about we do one more cool thing with our newly created timer?
+
 ## Starting and Stopping
+
+Let's also allow starting and stopping our timer. First, we'll need to allow creating our timer, without triggering it:
 
 ```csharp
 private static SafeTimer Unstarted(TimerCallback callback)
@@ -237,7 +261,17 @@ private static SafeTimer Unstarted(TimerCallback callback)
     var innerTimer = new Timer(callback, null, Timeout.Infinite, Timeout.Infinite);
     return new(innerTimer);
 }
+
+public static SafeTimer Unstarted(Action action, Action<Exception>? onException = null) {
+    return Unstarted(TimerCallback(action, onException));
+}
+
+public static SafeTimer Unstarted(Func<Task> action, Action<Exception>? onException = null) {
+    return Unstarted(TimerCallback(action, onException));
+}
 ```
+
+All we have to do is to make methods around tricky ways to start and stop our inner `Threading.Timer`:
 
 ```csharp
 public void Stop() {
@@ -248,6 +282,8 @@ public void Start(TimeSpan interval) {
     innerTimer.Change(TimeSpan.Zero, interval);
 }
 ```
+
+Now let's add timer handles to our API:
 
 ```csharp
 var timer = SafeTimer.Unstarted(
@@ -265,7 +301,11 @@ app.MapGet("/stop", () => {
 });
 ```
 
+Then, after triggering it via `dotnet run` we should be able to `curl localhost:5601/start` and `curl localhost:5601/stop` it:
+
 ![](start-stop-demo.gif)
+
+And this is our timer ladies and gentlemen! Now, let's take time to summarize our findings.
 
 ## Recap
 
