@@ -2,6 +2,8 @@
 
 Periodically executing an action is a pretty common programming task, virtually any .NET developer will face sooner or later. In fact, the task is so common that .NET ships 3! different timers (not counting UI-specific timers). Sadly, Microsoft doesn't really provide a guide on which one to choose and how to use it in a real-world application. So let's experiment on our own!
 
+![](thumb.png)
+
 ## Preparing our app
 
 To keep it real let's set up our experiments in a way we may actually use timers in a production-ready service: as an `IHostedService`. Let's init our project with a minimalistic web project: `dotnet new web` and then write a skeleton for our service, which will start a timer based on the values we will pass to it from the configuration
@@ -82,7 +84,7 @@ public void Tick()
 }
 ```
 
-To start timer from the `System.Threading` namespace we'll provide a zero `dueTime`, meaning it should start immediately and 2 seconds `period`, meaning it should fire callback once in two seconds!
+To start the timer from the `System.Threading` namespace we'll provide a zero `dueTime`, meaning it should start immediately and 2 seconds `period`, meaning it should fire a callback once in two seconds!
 
 ```csharp
 public void StartThreadingTimer()
@@ -96,11 +98,11 @@ public void StartThreadingTimer()
 }
 ```
 
-Running it by `dotnet run --timer=Threading` will print us the ticker response, but kill the whole application in case of a error:
+Running it by `dotnet run --timer=Threading` will print us the ticker response, but kill the whole application in case of an error:
 
 ![](threading-demo.gif)
 
-Killing the whole app doesn't seem like a pleasable idea at all. Let's see what other timers have to offer.
+Killing the whole app doesn't seem like an acceptable idea at all. Let's see what other timers have to offer.
 
 ## System.Timers.Timer
 
@@ -140,7 +142,7 @@ Now with `dotnet run --timer=System --logTickError=true` will be able to see the
 
 ![](system-demo-logged.gif)
 
-Although, that behaviour is more stable than the one we witnessed before it requires a dedicated effort for proper exception handling. This is especially worrying when the most straightforward implementation leads to silenced exceptions and there's nothing indication that a dedicated effort should be made. Let's see what else we have.
+Although, that behaviour is more stable than the one we witnessed before it requires a dedicated effort for proper exception handling. This is especially worrying when the most straightforward implementation leads to silenced exceptions and there's nothing indicating that a dedicated effort should be made. Let's see what else we have.
 
 ## System.Threading.PeriodicTimer
 
@@ -160,7 +162,7 @@ public void StartPeriodicTimer()
 }
 ```
 
-To make it worse running the code by `dotnet run --timer=Periodic` gives the most confusing behaviour, of just freezing in some point.
+To make it worse running the code by `dotnet run --timer=Periodic` gives the most confusing behaviour, of just freezing at some point.
 
 ![](periodic-demo-silent.gif)
 
@@ -172,7 +174,7 @@ Unfortunately, the newest `PeriodicTimer` doesn't really solve any problem we ha
 
 ## SafeTimer
 
-We'll build our timer on-top of the only timer that allows to trigger tick immediately: The one from the threading namespace.
+We'll build our timer on top of the only timer that allows to trigger tick immediately: The one from the threading namespace.
 
 ```csharp
 public class SafeTimer(Timer innerTimer)
