@@ -4,7 +4,7 @@ Periodically executing an action is a pretty common programming task, virtually 
 
 ## Preparing our app
 
-To keep it real let's setup our experiments in a way we may actually use timers in a production-ready service: as an `IHostedService`. Let's init our project with a minimalistic web project: `dotnet new web` and then write a skeleton for our service, which will start a timer based on the values we will pass to it from the configuration
+To keep it real let's set up our experiments in a way we may actually use timers in a production-ready service: as an `IHostedService`. Let's init our project with a minimalistic web project: `dotnet new web` and then write a skeleton for our service, which will start a timer based on the values we will pass to it from the configuration
 
 ```csharp
 public class HostedTimerService(IConfiguration configuration, ILogger<HostedTimerService> logger) : IHostedService
@@ -104,7 +104,7 @@ Killing the whole app doesn't seem like a pleasable idea at all. Let's see what 
 
 ## System.Timers.Timer
 
-The timer from `System.Timers` utilizes events-based approach, to start it we'll need something like this:
+The timer from `System.Timers` utilizes an events-based approach, to start it we'll need something like this:
 
 ```csharp
 public void StartSystemTimer()
@@ -119,9 +119,9 @@ Running it with `dotnet run --timer=System` will give us ticks without breaking 
 
 ![](system-demo-silent.gif)
 
-> The timers waits for its interval before running for the first time. In my view, that's not something we want and we will address it later.
+> The timer waits for its interval before running for the first time. In my view, that's not something we want and we will address it later.
 
-Although now the app doesn't break it also doesn't identify that an exception is occurring, which is not behaviour we want either. We'll need to handle that on our own. Let's add a configuration flag, that will highlight us that an exception is about to happen:
+Although now the app doesn't break it also doesn't identify that an exception is occurring, which is not behaviour we want either. We'll need to handle that on our own. Let's add a configuration flag, that will highlight to us that an exception is about to happen:
 
 ```csharp
 public void Tick()
@@ -140,11 +140,11 @@ Now with `dotnet run --timer=System --logTickError=true` will be able to see the
 
 ![](system-demo-logged.gif)
 
-Although, that behaviour is more stable than the once we witnessed before it requires a dedicated effort for proper exception handling. This is especially worrying when the most straight-forward implementation leads to silenced exceptions and there's nothing indication that a dedicated effort should be done. Let's see what else we have.
+Although, that behaviour is more stable than the one we witnessed before it requires a dedicated effort for proper exception handling. This is especially worrying when the most straightforward implementation leads to silenced exceptions and there's nothing indication that a dedicated effort should be made. Let's see what else we have.
 
 ## System.Threading.PeriodicTimer
 
-`PeriodicTimer` was added in `.NET 6` and it is promoted by Microsoft as the modest modern and straight-forward way to implement the functionality we are seeking. Surprisingly, I find the code for timer most clumsy of all. 
+`PeriodicTimer` was added in `.NET 6` and it is promoted by Microsoft as the modest modern and straight-forward way to implement the functionality we are seeking. Surprisingly, I find the code for the timer most clumsy of all. 
 
 ```csharp
 public void StartPeriodicTimer()
@@ -178,7 +178,7 @@ We'll build our timer on-top of the only timer that allows to trigger tick immed
 public class SafeTimer(Timer innerTimer)
 ```
 
-You may notice the name for our new timer is `SafeTimer`. That's because our timer will protect us from an occuring exception killing our app, simultaneously identifying to us that we should do something with an occuring exception:
+You may notice the name for our new timer is `SafeTimer`. That's because our timer will protect us from an occurring exception killing our app, simultaneously identifying to us that we should do something with an occurring exception:
 
 > We'll do two methods for synchronous and asynchronous operations
 
@@ -239,7 +239,7 @@ public void StartSafeTimer() {
 }
 ```
 
-And add an option to trigger it from the configuration
+And add an option to trigger it from the configuration:
 
 ```csharp
 "Safe" => StartSafeTimer,
@@ -249,7 +249,7 @@ With that, by running `dotnet run --timer=System` we will get a timer, that star
 
 ![](safe-demo.gif)
 
-This wraps the main part about timers. But how about we do one more cool thing with our newly created timer.
+This wraps up the main part about timers. But how about we do one more cool thing with our newly created timer?
 
 ## Starting and Stopping
 
@@ -271,7 +271,7 @@ public static SafeTimer Unstarted(Func<Task> action, Action<Exception>? onExcept
 }
 ```
 
-All we have to do is to make a methods around tricky ways to start and stop our inner `Threading.Timer`:
+All we have to do is to make methods around tricky ways to start and stop our inner `Threading.Timer`:
 
 ```csharp
 public void Stop() {
@@ -283,7 +283,7 @@ public void Start(TimeSpan interval) {
 }
 ```
 
-Now let's add a timer handles to our API:
+Now let's add timer handles to our API:
 
 ```csharp
 var timer = SafeTimer.Unstarted(
@@ -305,7 +305,7 @@ Then, after triggering it via `dotnet run` we should be able to `curl localhost:
 
 ![](start-stop-demo.gif)
 
-And this is our timer ladies and gentlemen! Now, let's take time to summarize our findings
+And this is our timer ladies and gentlemen! Now, let's take time to summarize our findings.
 
 ## Recap
 
