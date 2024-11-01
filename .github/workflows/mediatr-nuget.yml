@@ -1,0 +1,18 @@
+name: Mediatr Nuget
+
+on:
+  push:
+    paths:
+      - 'mediator/dotnet/lib/**'
+      - '.github/workflows/mediatr-nuget.yml'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Pack & Publish nuget
+    runs-on: ubuntu-latest
+    steps:
+      - uses: astorDev/versy/calver/nuget@main
+        with:
+          project: mediator/dotnet/lib/Backi.Mediatr
+          nuget-api-key: ${{ secrets.NUGET_API_KEY }}
