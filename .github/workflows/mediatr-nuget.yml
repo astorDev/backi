@@ -3,7 +3,7 @@ name: Mediatr Nuget
 on:
   push:
     paths:
-      - 'mediator/dotnet/lib/**'
+      - 'mediator/dotnet/core/**'
       - '.github/workflows/mediatr-nuget.yml'
   workflow_dispatch:
 
