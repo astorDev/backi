@@ -1,0 +1,7 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=0c682e2c_002D1af8_002D41e4_002D9940_002Da3dcb1d4afe0/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="CreateHandlerEachTime" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;MSTest::2243861D-99F1-427E-80A6-DDED312872D7::net8.0::Backi.Tests.SendMediatrRequestShould.CreateHandlerEachTime&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::C47EDCC3-FF07-4B1E-BDC4-06544C6264F5::net8.0::Backi.Tests.TimediatrShould.SendCommandOneFewTimes&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

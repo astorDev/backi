@@ -16,4 +16,13 @@ public static class ServiceScopeExtensions
         await mediator.Send(request, cancellationToken ?? CancellationToken.None);
         logger?.LogInformation("{requestType} processed by mediator", typeof(TRequest));
     }
+    
+    public static async Task SendMediatorRequest(this IServiceScopeFactory serviceScopeFactory, object request, ILogger? logger = null, CancellationToken? cancellationToken = null)
+    {
+        logger?.LogDebug("Sending {requestType} to mediator in a new scope", request.GetType());
+        using var scope = serviceScopeFactory.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        await mediator.Send(request, cancellationToken ?? CancellationToken.None);
+        logger?.LogInformation("{requestType} processed by mediator", request.GetType());
+    }
 }
