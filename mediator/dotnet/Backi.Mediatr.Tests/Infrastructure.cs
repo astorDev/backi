@@ -40,8 +40,8 @@ public class CommandOne : IRequest
     public class Handler : IRequestHandler<CommandOne>
     {
         readonly CounterCollection counters;
-        public const string ConstructorCounterKey = "CommandA.Handler.Constructor";
-        public const string HandleCounterKey = "CommandA.Handler.Handle";
+        public const string ConstructorCounterKey = "CommandOne.Handler.Constructor";
+        public const string HandleCounterKey = "CommandOne.Handler.Handle";
         
         public Handler(CounterCollection counters)
         {
@@ -51,6 +51,29 @@ public class CommandOne : IRequest
         }
 
         public Task Handle(CommandOne request, CancellationToken cancellationToken)
+        {
+            counters.Increment(HandleCounterKey);
+            return Task.CompletedTask;
+        }
+    }
+}
+
+public class CommandTwo : IRequest
+{
+    public class Handler : IRequestHandler<CommandTwo>
+    {
+        readonly CounterCollection counters;
+        public const string ConstructorCounterKey = "CommandTwo.Handler.Constructor";
+        public const string HandleCounterKey = "CommandTwo.Handler.Handle";
+        
+        public Handler(CounterCollection counters)
+        {
+            this.counters = counters;
+            
+            counters.Increment(ConstructorCounterKey);
+        }
+
+        public Task Handle(CommandTwo request, CancellationToken cancellationToken)
         {
             counters.Increment(HandleCounterKey);
             return Task.CompletedTask;
