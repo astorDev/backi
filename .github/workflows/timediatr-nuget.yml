@@ -1,10 +1,10 @@
-name: Mediatr Nuget
+name: Timediatr Nuget
 
 on:
   push:
     paths:
-      - 'mediator/dotnet/core/**'
-      - '.github/workflows/mediatr-nuget.yml'
+      - 'mediator/dotnet/timediatr/**'
+      - '.github/workflows/timediatr-nuget.yml'
   workflow_dispatch:
 
 jobs:
@@ -14,5 +14,5 @@ jobs:
     steps:
       - uses: astorDev/versy/calver/nuget@main
         with:
-          project: mediator/dotnet/core/Backi.Mediatr
+          project: mediator/dotnet/timediatr/Backi.Timediatr
           nuget-api-key: ${{ secrets.NUGET_API_KEY }}
