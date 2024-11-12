@@ -1,4 +1,6 @@
+using System.Reflection;
 using Backi.Timers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -50,6 +52,32 @@ public class TimediatrBackgroundService(
 public class TimediatrConfiguration
 {
     public Dictionary<object, TimeSpan> Schedule { get; set; } = new();
+
+    public void AddAllFrom(IConfiguration configuration, params Assembly[] assemblies)
+    {
+        var children = configuration.GetChildren();
+        foreach (var configPair in children)
+        {
+            var interval = TimeSpan.Parse(configPair.Value!);
+            var type = CreateInstance(configPair.Key, assemblies);
+            Schedule.Add(type, interval);
+        }
+    }
+
+    public static object CreateInstance(string typeName, IEnumerable<Assembly> assemblies)
+    {
+        foreach (var assembly in assemblies)
+        {
+            var found = assembly.GetType(typeName);
+            if (found != null)
+            {
+                var activated = Activator.CreateInstance(found)!;
+                return activated;
+            }
+        }
+
+        throw new InvalidOperationException($"Type `{typeName}` not found in any of the supplied assemblies");
+    }
 }
 
 public static class TimediatrServiceCollectionExtensions
