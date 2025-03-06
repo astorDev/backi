@@ -4,5 +4,11 @@
     &lt;TestId&gt;MSTest::2243861D-99F1-427E-80A6-DDED312872D7::net8.0::Backi.Tests.SendMediatrRequestShould.CreateHandlerEachTime&lt;/TestId&gt;
     &lt;TestId&gt;MSTest::C47EDCC3-FF07-4B1E-BDC4-06544C6264F5::net8.0::Backi.Tests.TimediatrShould.SendCommandOneFewTimes&lt;/TestId&gt;
     &lt;TestId&gt;MSTest::C47EDCC3-FF07-4B1E-BDC4-06544C6264F5::net8.0::Backi.Tests.TimediatrShould&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::E1D3E1F4-6B49-4B1C-8607-C23625258F1A::net9.0::Backi.Postgres.Playground.ForUpdateOperator.CheckLocks&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::E1D3E1F4-6B49-4B1C-8607-C23625258F1A::net9.0::Backi.Postgres.Playground.ForUpdateOperator.CheckLocksWithoutDisposable&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::E1D3E1F4-6B49-4B1C-8607-C23625258F1A::net9.0::Backi.Postgres.Playground.ForUpdateOperator.CheckNoDisposing&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::E1D3E1F4-6B49-4B1C-8607-C23625258F1A::net9.0::Backi.Postgres.Playground.ForUpdateOperator&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::E1D3E1F4-6B49-4B1C-8607-C23625258F1A::net9.0::Backi.Postgres.Playground.TransactionDisposing.CommitChangeIfCalled&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::E1D3E1F4-6B49-4B1C-8607-C23625258F1A::net9.0::Backi.Postgres.Playground.TransactionDisposing.RollbackWhenDisposed&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
