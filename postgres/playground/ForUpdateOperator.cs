@@ -8,7 +8,7 @@ public class ForUpdateOperator
     [TestMethod]
     public async Task AllDisposed()
     {
-        await (await Db.CreateEmpty(useLogger: false)).AddThousandItems();
+        await (await Db.CreateEmpty(useLogger: false)).SaveThousandNewItems();
 
         _ = Task.Run(async () =>
         {
@@ -33,7 +33,7 @@ public class ForUpdateOperator
     [TestMethod]
     public async Task NoDisposing()
     {
-        await (await Db.CreateEmpty(useLogger: false)).AddThousandItems();
+        await (await Db.CreateEmpty(useLogger: false)).SaveThousandNewItems();
 
         _ = Task.Run(async () =>
         {
@@ -59,7 +59,7 @@ public class ForUpdateOperator
     [TestMethod]
     public async Task OnlyDbDisposing()
     {
-        await (await Db.CreateEmpty(useLogger: false)).AddThousandItems();
+        await (await Db.CreateEmpty(useLogger: false)).SaveThousandNewItems();
 
         _ = Task.Run(async () =>
         {
@@ -84,7 +84,7 @@ public class ForUpdateOperator
     [TestMethod]
     public async Task OnlyTransactionDisposing()
     {
-        await (await Db.CreateEmpty(useLogger: false)).AddThousandItems();
+        await (await Db.CreateEmpty(useLogger: false)).SaveThousandNewItems();
 
         _ = Task.Run(async () =>
         {
@@ -109,7 +109,7 @@ public class ForUpdateOperator
     [TestMethod]
     public async Task ExceptionInTheEnd()
     {
-        await (await Db.CreateEmpty(useLogger: false)).AddThousandItems();
+        await (await Db.CreateEmpty(useLogger: false)).SaveThousandNewItems();
 
         _ = Task.Run(async () =>
         {
