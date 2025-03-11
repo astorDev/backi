@@ -4,17 +4,16 @@ using Shouldly;
 namespace Backi.Postgres.Playground;
 
 [TestClass]
-public sealed class BasicShould
+public sealed class DbShould
 {
     [TestMethod]
-    public async Task ConnectAndPerformBasicOperations()
+    public async Task ConnectAndPerformBasic()
     {
-        using var db = await Db.CreateEmpty();
+        using var db = await Db.CreateEmpty(useLogger: false);
+        await db.SaveThousandNewItems();
 
-        db.Queue.Add(new QueueItem { Name = "Test" });
-        await db.SaveChangesAsync();
-
-        var count = await db.Queue.CountAsync();
-        count.ShouldBe(1);
+        using var db2 = Db.Create(useLogger: true);
+        var count = await db2.Queue.CountAsync();
+        count.ShouldBe(1_000);
     }
 }

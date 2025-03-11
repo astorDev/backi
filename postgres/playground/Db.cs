@@ -25,16 +25,6 @@ public class Db(DbContextOptions<Db> options) : DbContext(options)
         return new Db(options);
     }
 
-    public async Task AddThousandItems()
-    {
-        var items = Enumerable.Range(1, 1000)
-            .Select(i => new QueueItem() { Name = $"Task {i}" });
-
-        Queue.AddRange(items);
-
-        await SaveChangesAsync();
-    }
-
     public static async Task<Db> CreateEmpty(bool useLogger = true)
     {
         var db = Create(useLogger);
@@ -44,6 +34,17 @@ public class Db(DbContextOptions<Db> options) : DbContext(options)
 
         return db;
     }
+    
+    public async Task SaveThousandNewItems()
+    {
+        var items = Enumerable.Range(1, 1000)
+            .Select(i => new QueueItem() { Name = $"Task {i}" });
+
+        Queue.AddRange(items);
+
+        await SaveChangesAsync();
+    }
+
 }
 
 public class QueueItem
