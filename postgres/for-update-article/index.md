@@ -6,7 +6,7 @@ In this article, we will explore how to manage concurrency in PostgreSQL queue p
 
 Let's dive in and see how you can leverage PostgreSQL and .NET to handle queue processing with ease.
 
-## Building the Playground: Deploying PostreSQL via Docker and Connecting to it using Entity Framework Core
+## Building the Playground: Deploying PostgreSQL via Docker and Connecting to it using Entity Framework Core
 
 Let's start by deploying PostgreSQL on our localhost. Here's a `compose.yml` file that does just that:
 
@@ -21,7 +21,7 @@ services:
       POSTGRES_PASSWORD: postgres
 ```
 
-After running `docker compose up -d` we should have our database deployed. Let's also create a new .NET project by running `dotnet new console`. Finally, we'll need a package for PostgreSQL provider for Entity Framework, a package to use `snake_case` naming convention and a console logger, for the observability. Here's the script to install all of them:
+After running `docker compose up -d` we should have our database deployed. Let's also create a new .NET project by running `dotnet new console`. Finally, we'll need a package for PostgreSQL provider for Entity Framework, a package to use `snake_case` naming convention, and a console logger, for the observability. Here's the script to install all of them:
 
 ```sh
 dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
