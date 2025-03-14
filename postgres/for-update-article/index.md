@@ -106,6 +106,185 @@ var count = await db2.Queue.CountAsync(); // should return 1000
 
 I hope you'll also be able to successfully obtain a 1000, because now it's time to do some queue processing!
 
+## Locking a Thousand Items utilizing the FOR UPDATE operator
+
+`FOR UPDATE`
+
+```sql
+SELECT * 
+FROM queue
+LIMIT 100
+FOR UPDATE
+```
+
+```csharp
+await (await Db.CreateEmpty(useLogger: false)).SaveThousandNewItems();
+```
+
+```csharp
+Console.WriteLine("Starting Lock Hundred");
+await using var db = Db.Create(useLogger: false);
+await using var tx = db.Database.BeginTransaction();
+_ = await db.Queue.FromSql(
+    $"""
+     SELECT * 
+     FROM queue
+     LIMIT 100
+     FOR UPDATE
+     """
+).ToListAsync();
+```
+
+
+```csharp
+public async Task FinishAndSleep(int milliseconds)
+{
+    Console.WriteLine("Finished Lock Hundred Query, Sleeping");
+    await Task.Delay(milliseconds);
+    Console.WriteLine("Sleeping ended");
+}
+```
+
+`FOR UPDATE SKIP LOCKED`
+
+```csharp
+public async Task CheckCurrentlyAvailable(int milliseconds)
+{
+    await using var db = Db.Create(useLogger: false);
+    await using var tx = db.Database.BeginTransaction();
+    var count = await db.Database.SqlQuery<int>(
+        $"""
+         WITH unlocked_rows AS (
+             SELECT 1 
+             FROM queue
+             FOR UPDATE SKIP LOCKED
+         )
+         SELECT COUNT(*) as "Value"
+         FROM unlocked_rows
+         """
+    ).FirstAsync();
+
+    await Task.Delay(milliseconds);
+    Console.WriteLine($"Unlocked rows count: {count}");
+}
+```
+
+```csharp
+public static async Task TenTimes(Func<Task> task)
+{
+    var checks = 0;
+    while (checks < 10)
+    {
+        await task();
+        checks++;
+    }
+}
+```
+
+```csharp
+await (await Db.CreateEmpty(useLogger: false)).SaveThousandNewItems();
+
+_ = Task.Run(async () =>
+{
+    Console.WriteLine("Starting Lock Hundred");
+    await using var db = Db.Create(useLogger: false);
+    await using var tx = db.Database.BeginTransaction();
+    _ = await db.Queue.FromSql(
+        $"""
+         SELECT * 
+         FROM queue
+         LIMIT 100
+         FOR UPDATE
+         """
+    ).ToListAsync();
+
+    await FinishAndSleep(500);
+});
+        
+await TenTimes(() => CheckCurrentlyAvailable(100));
+```
+
+```text
+ Starting Lock Hundred
+ Finished Lock Hundred Query, Sleeping
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Sleeping ended
+ Unlocked rows count: 900
+ Unlocked rows count: 1000
+ Unlocked rows count: 1000
+ Unlocked rows count: 1000
+ Unlocked rows count: 1000
+ Unlocked rows count: 1000
+```
+
+## Playing around with Entity Framework (EF) Transactions
+
+```csharp
+var db = Db.Create(useLogger: false);
+_ = db.Database.BeginTransaction();
+```
+
+```text
+ Starting Lock Hundred
+ Unlocked rows count: 1000
+ Finished Lock Hundred Query, Sleeping
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Sleeping ended
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+```
+
+```csharp
+await using var db = Db.Create(useLogger: false);
+_ = db.Database.BeginTransaction();
+```
+
+```text
+ Starting Lock Hundred
+ Finished Lock Hundred Query, Sleeping
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Sleeping ended
+ Unlocked rows count: 900
+ Unlocked rows count: 1000
+ Unlocked rows count: 1000
+ Unlocked rows count: 1000
+ Unlocked rows count: 1000
+ Unlocked rows count: 1000
+```
+
+```csharp
+var db = Db.Create(useLogger: false);
+await using var tx = db.Database.BeginTransaction();
+```
+
+```text
+ Starting Lock Hundred
+ Unlocked rows count: 1000
+ Finished Lock Hundred Query, Sleeping
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Unlocked rows count: 900
+ Sleeping ended
+ Unlocked rows count: 900
+ Unlocked rows count: 1000
+ Unlocked rows count: 1000
+ Unlocked rows count: 1000
+ Unlocked rows count: 1000
+```
+
 ## Wrapping Up!
 
 By following the techniques and examples provided in this article, you should now have a solid understanding of how to handle concurrency in PostgreSQL queue processing using C# and Entity Framework. Efficient queue processing is essential for maintaining the performance and reliability of your applications, especially when dealing with high volumes of tasks.
