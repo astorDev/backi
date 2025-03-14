@@ -108,7 +108,7 @@ I hope you'll also be able to successfully obtain a 1000, because now it's time 
 
 ## Introducing the FOR UPDATE Operator!
 
-As you may see in the title we'll use the `FOR UPDATE` operator for our task. The operator locks selected rows for the duration of the current transaction, which is exactly what we need: Exclusively acquire a set of queue items for the time of processing. Our goal for this article is just to get familiar with the basics of the operator, so we'll use the simplest example possible:
+As you may see in the title, we'll use the `FOR UPDATE` operator for our task. The operator locks selected rows for the duration of the current transaction, which is exactly what we need: Exclusively acquire a set of queue items for the time of processing. Our goal for this article is just to get familiar with the basics of the operator, so we'll use the simplest example possible:
 
 ```sql
 SELECT * 
@@ -117,7 +117,7 @@ LIMIT 100
 FOR UPDATE
 ```
 
-Locking the rows is good for exclusivity, but pretty bad for performance, since the other queries will likely just wait for the transaction to release the lock. Gladly, we can tell other queries to just forget about the locked rows using `FOR UPDATE SKIP LOCKED` construct. Here's how we can use this operator in another query, calculating how much rows are currently available:
+Locking the rows is good for exclusivity, but pretty bad for performance, since the other queries will likely just wait for the transaction to release the lock. Gladly, we can tell other queries to just forget about the locked rows using `FOR UPDATE SKIP LOCKED` construct. Here's how we can use this operator in another query, calculating how many rows are currently available:
 
 ```sql
 WITH unlocked_rows AS (
@@ -155,7 +155,7 @@ _ = await db.Queue.FromSql(
 ).ToListAsync();
 ```
 
-Before exiting let's sleep for a little while, so that we can run another queries against the table with some locked items:
+Before exiting let's sleep for a little while, so that we can run another query against the table with some locked items:
 
 ```csharp
 public async Task FinishAndSleep(int milliseconds)
@@ -204,7 +204,7 @@ public static async Task TenTimes(Func<Task> task)
 }
 ```
 
-Let's put it all together! After initiating the database we'll start a task in a background locking our items for about 500 milliseconds. In parallel, we'll run the check of currently available items. Here's how it all will look together:
+Let's put it all together! After initiating the database, we'll start a task in a background, locking our items for about 500 milliseconds. In parallel, we'll run the check of currently available items. Here's how it all will look together:
 
 ```csharp
 await (await Db.CreateEmpty(useLogger: false)).SaveThousandNewItems();
@@ -247,9 +247,9 @@ And here's the result we might expect:
  Unlocked rows count: 1000
 ```
 
-As you may see, the query successfully locked a hundred items for the first five check iterations. After that we were able to get the whole thousand items unlocked!
+As you may see, the query successfully locked a hundred items for the first five check iterations. After that, we were able to get the whole thousand items unlocked!
 
-This is basically it about the PostgreSQL! But if you are anything like me you might be wondering how the transactions we've used are closed in EF - let's experiment with that!
+This is basically it about the PostgreSQL! But if you are anything like me, you might be wondering how the transactions we've used are closed in EF - let's experiment with that!
 
 ## Bonus: Playing around with Entity Framework (EF) Transactions
 
@@ -310,7 +310,7 @@ var db = Db.Create(useLogger: false);
 await using var tx = db.Database.BeginTransaction();
 ```
 
-As you might expect that will work as well:
+As you might expect, that will work as well:
 
 ```text
  Starting Lock Hundred
