@@ -24,10 +24,10 @@ public class ForUpdateOperator
                  """
             ).ToListAsync();
 
-            await FinishAndSleep();
+            await FinishAndSleep(500);
         });
         
-        await TenTimes(CheckCurrentlyAvailable);
+        await TenTimes(() => CheckCurrentlyAvailable(100));
     }
     
     [TestMethod]
@@ -49,10 +49,10 @@ public class ForUpdateOperator
                  """
             ).ToListAsync();
 
-            await FinishAndSleep();
+            await FinishAndSleep(500);
         });
         
-        await TenTimes(CheckCurrentlyAvailable);
+        await TenTimes(() => CheckCurrentlyAvailable(100));
     }
     
     
@@ -75,10 +75,10 @@ public class ForUpdateOperator
                  """
             ).ToListAsync();
 
-            await FinishAndSleep();
+            await FinishAndSleep(500);
         });
         
-        await TenTimes(CheckCurrentlyAvailable);
+        await TenTimes(() => CheckCurrentlyAvailable(100));
     }
 
     [TestMethod]
@@ -100,10 +100,10 @@ public class ForUpdateOperator
                  """
             ).ToListAsync();
 
-            await FinishAndSleep();
+            await FinishAndSleep(500);
         });
         
-        await TenTimes(CheckCurrentlyAvailable);
+        await TenTimes(() => CheckCurrentlyAvailable(100));
     }
     
     [TestMethod]
@@ -125,11 +125,11 @@ public class ForUpdateOperator
                  """
             ).ToListAsync();
 
-            await FinishAndSleep();
+            await FinishAndSleep(500);
             throw new ("Unexpected expected exception");
         });
         
-        await TenTimes(CheckCurrentlyAvailable);
+        await TenTimes(() => CheckCurrentlyAvailable(100));
     }
     
     public static async Task TenTimes(Func<Task> task)
@@ -142,14 +142,14 @@ public class ForUpdateOperator
         }
     }
 
-    public async Task FinishAndSleep()
+    public async Task FinishAndSleep(int milliseconds)
     {
         Console.WriteLine("Finished Lock Hundred Query, Sleeping");
-        await Task.Delay(500);
+        await Task.Delay(milliseconds);
         Console.WriteLine("Sleeping ended");
     }
 
-    public async Task CheckCurrentlyAvailable()
+    public async Task CheckCurrentlyAvailable(int milliseconds)
     {
         await using var db = Db.Create(useLogger: false);
         await using var tx = db.Database.BeginTransaction();
@@ -165,7 +165,7 @@ public class ForUpdateOperator
              """
         ).FirstAsync();
 
-        await Task.Delay(100);
+        await Task.Delay(milliseconds);
         Console.WriteLine($"Unlocked rows count: {count}");
     }
 }
