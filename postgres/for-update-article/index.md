@@ -106,9 +106,9 @@ var count = await db2.Queue.CountAsync(); // should return 1000
 
 I hope you'll also be able to successfully obtain a 1000, because now it's time to do some queue processing!
 
-## Locking a Thousand Items utilizing the FOR UPDATE operator
+## Introducing the FOR UPDATE Operator!
 
-`FOR UPDATE`
+As you may see in the title we'll use the `FOR UPDATE` operator for our task. The operator locks selected rows for the duration of the current transaction, which is exactly what we need: Exclusively acquire a set of queue items for the time of processing. Our goal for this article is just to get familiar with the basics of the operator, so we'll use the simplest example possible:
 
 ```sql
 SELECT * 
@@ -117,9 +117,29 @@ LIMIT 100
 FOR UPDATE
 ```
 
+Locking the rows is good for exclusivity, but pretty bad for performance, since the other queries will likely just wait for the transaction to release the lock. Gladly, we can tell other queries to just forget about the locked rows using `FOR UPDATE SKIP LOCKED` construct. Here's how we can use this operator in another query, calculating how much rows are currently available:
+
+```sql
+WITH unlocked_rows AS (
+    SELECT 1 
+    FROM queue
+    FOR UPDATE SKIP LOCKED
+)
+SELECT COUNT(*) as "Value"
+FROM unlocked_rows
+```
+
+Now, when we know our SQL, let's put it together with Entity Framework and run some experiments!
+
+## Locking a Hundred Items in EF with the FOR UPDATE operator
+
+First thing first, we'll initiate our database
+
 ```csharp
 await (await Db.CreateEmpty(useLogger: false)).SaveThousandNewItems();
 ```
+
+Then, using a new `db` instance we'll lock a hundred items. We'll need to begin a transaction, so that our retrieved rows will stay locked not just for the duration of the query, but until we close the transaction. Here's how we can start the query:
 
 ```csharp
 Console.WriteLine("Starting Lock Hundred");
@@ -135,6 +155,7 @@ _ = await db.Queue.FromSql(
 ).ToListAsync();
 ```
 
+Before exiting let's sleep for a little while, so that we can run another queries against the table with some locked items:
 
 ```csharp
 public async Task FinishAndSleep(int milliseconds)
@@ -145,7 +166,7 @@ public async Task FinishAndSleep(int milliseconds)
 }
 ```
 
-`FOR UPDATE SKIP LOCKED`
+What we'll run in another thread is our familiar query, counting currently available items. Here's the code:
 
 ```csharp
 public async Task CheckCurrentlyAvailable(int milliseconds)
@@ -169,6 +190,8 @@ public async Task CheckCurrentlyAvailable(int milliseconds)
 }
 ```
 
+Moreover, we won't just count it once, we'll do it 10 times to track dynamics. Here's a helper method, that will let us achieve that;
+
 ```csharp
 public static async Task TenTimes(Func<Task> task)
 {
@@ -180,6 +203,8 @@ public static async Task TenTimes(Func<Task> task)
     }
 }
 ```
+
+Let's put it all together! After initiating the database we'll start a task in a background locking our items for about 500 milliseconds. In parallel, we'll run the check of currently available items. Here's how it all will look together:
 
 ```csharp
 await (await Db.CreateEmpty(useLogger: false)).SaveThousandNewItems();
@@ -204,6 +229,8 @@ _ = Task.Run(async () =>
 await TenTimes(() => CheckCurrentlyAvailable(100));
 ```
 
+And here's the result we might expect:
+
 ```text
  Starting Lock Hundred
  Finished Lock Hundred Query, Sleeping
@@ -220,13 +247,21 @@ await TenTimes(() => CheckCurrentlyAvailable(100));
  Unlocked rows count: 1000
 ```
 
-## Playing around with Entity Framework (EF) Transactions
+As you may see, the query successfully locked a hundred items for the first five check iterations. After that we were able to get the whole thousand items unlocked!
+
+This is basically it about the PostgreSQL! But if you are anything like me you might be wondering how the transactions we've used are closed in EF - let's experiment with that!
+
+## Bonus: Playing around with Entity Framework (EF) Transactions
+
+First, let's try removing all the `using` statements we have:
 
 ```csharp
 var db = Db.Create(useLogger: false);
 _ = db.Database.BeginTransaction();
 ```
 
+Here's what we will get in this case:
+
 ```text
  Starting Lock Hundred
  Unlocked rows count: 1000
@@ -242,12 +277,16 @@ _ = db.Database.BeginTransaction();
  Unlocked rows count: 900
  Unlocked rows count: 900
 ```
+
+As you might see, the lock never ended, since we've never disposed the transaction in any way. But what will happen if we dispose only the `Db` and not the transaction:
 
 ```csharp
 await using var db = Db.Create(useLogger: false);
 _ = db.Database.BeginTransaction();
 ```
 
+Well, it seems like this will still unlock our rows:
+
 ```text
  Starting Lock Hundred
  Finished Lock Hundred Query, Sleeping
@@ -263,12 +302,16 @@ _ = db.Database.BeginTransaction();
  Unlocked rows count: 1000
  Unlocked rows count: 1000
 ```
+
+And what if we dispose just the transaction:
 
 ```csharp
 var db = Db.Create(useLogger: false);
 await using var tx = db.Database.BeginTransaction();
 ```
 
+As you might expect that will work as well:
+
 ```text
  Starting Lock Hundred
  Unlocked rows count: 1000
@@ -284,6 +327,8 @@ await using var tx = db.Database.BeginTransaction();
  Unlocked rows count: 1000
  Unlocked rows count: 1000
 ```
+
+The conclusion that we might end up with is: don't forget to dispose... at least something.
 
 ## Wrapping Up!
 
