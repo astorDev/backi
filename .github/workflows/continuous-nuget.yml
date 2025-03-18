@@ -1,0 +1,18 @@
+name: Continuous Nuget
+
+on:
+  push:
+    paths:
+      - 'continuous/lib/**'
+      - '.github/workflows/continuous-nuget.yml'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Pack & Publish nuget
+    runs-on: ubuntu-latest
+    steps:
+      - uses: astorDev/versy/calver/nuget@main
+        with:
+          project: continuous/lib/Backi.Continuous
+          nuget-api-key: ${{ secrets.NUGET_API_KEY }}
