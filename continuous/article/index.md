@@ -4,7 +4,158 @@
 
 .NET provides us with a built-in way to create a background service via `IHostedService` and its specific implementation - `BackgroundService`. However, there's not much infrastructure provided for common scenarios, so that falls on our shoulders. In [this article](https://medium.com/@vosarat1995/net-timers-all-you-need-to-know-d020c73b63a4), I've shown how we can run a periodic job using timers. In this article, we'll build a service that runs the same short operation safely on repeat for the life scope of our application.
 
-> Or jump straight to the [TLDR;](#tldr) in the end of this article
+> Or jump straight to the [TLDR;](#tldr) in the end of this article.
+
+## First Implementation: Singleton-Based Iteration
+
+```sh
+dotnet new web
+```
+
+```csharp
+builder.Logging.AddSimpleConsole(c => c.SingleLine = true);
+```
+
+```csharp
+public interface IContinuousWorkIteration
+{
+    Task Run(CancellationToken stoppingToken);
+}
+
+public class ContinuousBackgroundService<TIteration>(TIteration iteration) 
+    : BackgroundService 
+    where TIteration : IContinuousWorkIteration
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await iteration.Run(stoppingToken);
+        }
+    }
+}
+
+public static partial class Registration
+{
+    public static IServiceCollection AddContinuousBackgroundService<TIteration>(this IServiceCollection services)
+        where TIteration : class, IContinuousWorkIteration
+    {
+        services.AddSingleton<TIteration>();
+        services.AddHostedService<ContinuousBackgroundService<TIteration>>();
+        return services;
+    }
+}
+```
+
+```csharp
+public class MyIteration(ILogger<MyIteration> logger) : IContinuousWorkIteration
+{
+    public async Task Run(CancellationToken stoppingToken)
+    {
+        logger.LogInformation("Running");
+        await Task.Delay(1000);
+        logger.LogInformation("Done");
+    }
+}
+```
+
+```csharp
+builder.Services.AddContinuousBackgroundService<MyIteration>();
+```
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.AddSimpleConsole(c => c.SingleLine = true);
+
+builder.Services.AddContinuousBackgroundService<MyIteration>();
+
+var app = builder.Build();
+
+app.MapGet("/", () => "Hello World!");
+
+app.Run();
+```
+
+![](demo.png)
+
+## Second Iteration: Applying Scoped Lifecycle for the Iteration
+
+```csharp
+public class ContinuousBackgroundService<TIteration>(IServiceScopeFactory scopeFactory) 
+    : BackgroundService 
+    where TIteration : IContinuousWorkIteration
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var iteration = scope.ServiceProvider.GetRequiredService<TIteration>();
+
+            await iteration.Run(stoppingToken);
+        }
+    }
+}
+```
+
+```csharp
+services.AddScoped<TIteration>();
+```
+
+## Final Iteration: Making Iterations Safe with Exception Handling
+
+```csharp
+public interface IContinuousWorkIteration
+{
+    Task Run(CancellationToken stoppingToken);
+    abstract static Task OnException(Exception ex, ILogger logger);
+}
+```
+
+```csharp
+public static async Task OnException(Exception ex, ILogger logger)
+{
+    logger.LogError(ex, "An error occurred");
+    await Task.Delay(500);
+}
+```
+
+```csharp
+try
+{
+    // run an iteration
+}
+catch (Exception ex)
+{
+    await TIteration.OnException(ex, logger);
+}
+```
+
+```csharp
+public class ContinuousBackgroundService<TIteration>(IServiceScopeFactory scopeFactory, ILogger<TIteration> logger) 
+    : BackgroundService 
+    where TIteration : IContinuousWorkIteration
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                await using var scope = scopeFactory.CreateAsyncScope();
+                var iteration = scope.ServiceProvider.GetRequiredService<TIteration>();
+                
+                await iteration.Run(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                await TIteration.OnException(ex, logger);
+            }
+        }
+    }
+}
+```
 
 ## TLDR;
 
