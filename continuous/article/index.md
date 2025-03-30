@@ -8,13 +8,21 @@
 
 ## First Implementation: Singleton-Based Iteration
 
+Let's set up our playground app. We'll just use a minimalistic .NET template:
+
 ```sh
 dotnet new web
 ```
 
+Plus, update the logging to make it more compact:
+
 ```csharp
 builder.Logging.AddSimpleConsole(c => c.SingleLine = true);
 ```
+
+Now, we can move to the main part. An ever-running service - or a continuous background service, as we will call it in code - is basically a service that runs a work iteration over and over again, while the application is running. We'll utilize `stoppingToken` to determine whether our application is running or reached its termination stage:
+
+> It's easy to imagine an app needing multiple `ContinuousBackgroundService`. That's the main reason for having a generic argument for `<TIteration>`, so that each service can be easily distinguished by a DI container.
 
 ```csharp
 public interface IContinuousWorkIteration
@@ -34,7 +42,11 @@ public class ContinuousBackgroundService<TIteration>(TIteration iteration)
         }
     }
 }
+```
 
+We'll also make a registration helper method to encapsulate the management of life-cycle of our service:
+
+```csharp
 public static partial class Registration
 {
     public static IServiceCollection AddContinuousBackgroundService<TIteration>(this IServiceCollection services)
@@ -46,6 +58,8 @@ public static partial class Registration
     }
 }
 ```
+
+Finally, let's implement the `IContinuousWorkIteration` to see our infrastructure in action:
 
 ```csharp
 public class MyIteration(ILogger<MyIteration> logger) : IContinuousWorkIteration
@@ -59,9 +73,13 @@ public class MyIteration(ILogger<MyIteration> logger) : IContinuousWorkIteration
 }
 ```
 
+It's also important not to forget to register the background service:
+
 ```csharp
 builder.Services.AddContinuousBackgroundService<MyIteration>();
 ```
+
+With that in place, here's how our `Program.cs` should look:
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -77,9 +95,15 @@ app.MapGet("/", () => "Hello World!");
 app.Run();
 ```
 
+Running the code with `dotnet run` should give us logs looking like that:
+
 ![](demo.png)
 
+The logs mean our background service is working as expected! However, there are a few things that are not quite right. Let's fix them in the next sections.
+
 ## Second Iteration: Applying Scoped Lifecycle for the Iteration
+
+The first problem is that we were using a singleton scope for our iteration. Although that worked in our example, it is typically not the right life cycle for an iteration. Normally, an iteration will depend on some external service, like a database which has a `Scoped` lifecycle. Consequently, we should make our iteration scoped, as well, and resolve it on each cycle of our loop. Here's how we are going to do that utilizing `IServiceScopeFactory`:
 
 ```csharp
 public class ContinuousBackgroundService<TIteration>(IServiceScopeFactory scopeFactory) 
@@ -99,11 +123,21 @@ public class ContinuousBackgroundService<TIteration>(IServiceScopeFactory scopeF
 }
 ```
 
+This is almost all the changes we'll need to do in this section. The only thing left is to update our `Registration` utility to register our iteration with the proper scope:
+
 ```csharp
 services.AddScoped<TIteration>();
 ```
 
+Now, when we have fixed our lifecycle, let's move to the final updates, which utilize a new C# feature, which has appeared only in C# 11.
+
 ## Final Iteration: Making Iterations Safe with Exception Handling
+
+For now, if an exception occurs during our iteration resolution or execution, it will completely stop our background service from running. Of course, this is not something we want. Instead, we should gracefully handle the exception and try to run our execution once again.
+
+This is where C# 11 abstract static interface members come into play. Since we also want to handle exceptions on our iteration resolution, we can't use an instance of our iteration for the handling. Instead, we will force an `IContinuousWorkIteration` to implement a static exception handler, passing an `ILogger` from the `ContinuousBackgroundService` itself.
+
+Here's how we will update our interface:
 
 ```csharp
 public interface IContinuousWorkIteration
@@ -113,6 +147,8 @@ public interface IContinuousWorkIteration
 }
 ```
 
+And a typical implementation of the handler will just log the exception and sleep for some time. We will do the same in `MyIteration`:
+
 ```csharp
 public static async Task OnException(Exception ex, ILogger logger)
 {
@@ -121,16 +157,22 @@ public static async Task OnException(Exception ex, ILogger logger)
 }
 ```
 
+What we are going to do in `ContinuousBackgroundService` is wrap our whole code in a try-catch block, calling the iteration static exception handler:
+
+> In theory, we could only wrap the `Run` method call in the try-catch block, removing the need for a static handler. However, there are some cases when resolution exceptions are transient (e.g., when a configuration value was broken in a remote configuration source) and we wouldn't want our background service to fall apart from those.
+
 ```csharp
 try
 {
-    // run an iteration
+    // resolve and run an iteration
 }
 catch (Exception ex)
 {
     await TIteration.OnException(ex, logger);
 }
 ```
+
+Here's how the code will look as a whole:
 
 ```csharp
 public class ContinuousBackgroundService<TIteration>(IServiceScopeFactory scopeFactory, ILogger<TIteration> logger) 
@@ -156,6 +198,8 @@ public class ContinuousBackgroundService<TIteration>(IServiceScopeFactory scopeF
     }
 }
 ```
+
+This is the last fix we will need to do to make our small `ContinuousBackgroundService` fully functional. However, there's a way to not implement the service yourself. We will see it, along with the quick recap of the thing we've implemented in the last section.
 
 ## TLDR;
 
