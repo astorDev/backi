@@ -22,7 +22,7 @@ Plus, update the logging to make it more compact:
 builder.Logging.AddSimpleConsole(c => c.SingleLine = true);
 ```
 
-Now, we can move to the main part. An ever-running service - or a continuous background service, as we will call it in code - is basically a service that runs a work iteration over and over again, while the application is running. We'll utilize `stoppingToken` to determine whether our application is running or reached its termination stage:
+Now, we can move to the main part. An ever-running service - or a continuous background service, as we will call it in code - is basically a service that runs a work iteration over and over again, while the application is running. We'll utilize `stoppingToken` to determine whether our application is running or has reached its termination stage:
 
 > It's easy to imagine an app needing multiple `ContinuousBackgroundService`. That's the main reason for having a generic argument for `<TIteration>`, so that each service can be easily distinguished by a DI container.
 
@@ -46,7 +46,7 @@ public class ContinuousBackgroundService<TIteration>(TIteration iteration)
 }
 ```
 
-We'll also make a registration helper method to encapsulate the management of life-cycle of our service:
+We'll also make a registration helper method to encapsulate the management of the life cycle of our service:
 
 ```csharp
 public static partial class Registration
@@ -125,7 +125,7 @@ public class ContinuousBackgroundService<TIteration>(IServiceScopeFactory scopeF
 }
 ```
 
-This is almost all the changes we'll need to do in this section. The only thing left is to update our `Registration` utility to register our iteration with the proper scope:
+These are almost all the changes we'll need to do in this section. The only thing left is to update our `Registration` utility to register our iteration with the proper scope:
 
 ```csharp
 services.AddScoped<TIteration>();
@@ -201,7 +201,7 @@ public class ContinuousBackgroundService<TIteration>(IServiceScopeFactory scopeF
 }
 ```
 
-This is the last fix we will need to do to make our small `ContinuousBackgroundService` fully functional. However, there's a way to not implement the service yourself. We will see it, along with the quick recap of the thing we've implemented in the last section.
+This is the last fix we will need to do to make our small `ContinuousBackgroundService` fully functional. However, there's a way to not implement the service yourself. We will see it, along with the quick recap of the things we've implemented in the last section.
 
 ## TLDR;
 
