@@ -28,3 +28,25 @@ WHERE id IN (
 )
 RETURNING *;
 ```
+
+## Approaches
+
+### Approach 1 - Update-based acquiring
+
+1. App selects and marks records as processing (e.g. status = processing or acquired_at = now()).
+2. App processes records (in app application logic)
+3. App marks the records as processed (`status` and `processed_at`)
+
+**Unfreezing:**
+
+A background job resets to pending "frozen" rows - rows which are not processed, but where `acquired_at` was long ago.
+
+### Approach 2 - Transaction-based acquiring
+
+1. User opens a transaction and selects rows with FOR UPDATE (without updating them in any way)
+2. App processes records (in app application logic)
+3. App marks the records as processes and closes transaction.
+
+**Unfreezing:**
+
+Done by Database transaction completion - either via explicit rollback from `IDisposable` or by DB unfreezing mechanisms.
