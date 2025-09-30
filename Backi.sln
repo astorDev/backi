@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backi.Continuous", "continu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backi.Continuous.Playground", "continuous\playground\Backi.Continuous.Playground.csproj", "{FF9478C5-57A2-4CB0-948A-6A5C47B2BD95}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mongo", "mongo", "{76FFFB0B-31DD-4F84-94BA-69C60DD46189}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backi.Queues.Mongo.Playground", "queues\mongo\play\Backi.Queues.Mongo.Playground.csproj", "{C1B6E086-E6E8-4364-A190-45A9152F7C49}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,10 +38,16 @@ Global
 		{FF9478C5-57A2-4CB0-948A-6A5C47B2BD95}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF9478C5-57A2-4CB0-948A-6A5C47B2BD95}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF9478C5-57A2-4CB0-948A-6A5C47B2BD95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1B6E086-E6E8-4364-A190-45A9152F7C49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1B6E086-E6E8-4364-A190-45A9152F7C49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1B6E086-E6E8-4364-A190-45A9152F7C49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1B6E086-E6E8-4364-A190-45A9152F7C49}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E1D3E1F4-6B49-4B1C-8607-C23625258F1A} = {0904800C-111F-4CBB-9D99-29C641115EE7}
 		{805B0FC3-D00B-4A08-82D5-BC14A3B369F3} = {DDB96C73-B54A-47E2-97E2-F10DE2BD89E6}
 		{FF9478C5-57A2-4CB0-948A-6A5C47B2BD95} = {DDB96C73-B54A-47E2-97E2-F10DE2BD89E6}
+		{76FFFB0B-31DD-4F84-94BA-69C60DD46189} = {0904800C-111F-4CBB-9D99-29C641115EE7}
+		{C1B6E086-E6E8-4364-A190-45A9152F7C49} = {76FFFB0B-31DD-4F84-94BA-69C60DD46189}
 	EndGlobalSection
 EndGlobal
